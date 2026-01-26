@@ -37,8 +37,8 @@ app.post("/paynow", async (req, res) => {
           quantity: 1,
         },
       ],
-      success_url: "https://driving-web-app3.web.app//paymentcomplete",
-      cancel_url: "https://driving-web-app3.web.app//paymentfailed",
+      success_url: "https://driving-web-app3.web.app/paymentcomplete",
+      cancel_url: "https://driving-web-app3.web.app/paymentfailed",
     });
 
     res.json({ url: session.url });
