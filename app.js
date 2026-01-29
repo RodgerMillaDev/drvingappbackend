@@ -32,8 +32,7 @@ app.post(
       event = stripe.webhooks.constructEvent(
         req.body,
         sig,
-        // process.env.STRIPE_WEBHOOK_SECRET
-        "whsec_FeJRpBLv1tvbguBgN1MHLBiS9CKrzgdN"
+        process.env.STRIPE_WEBHOOK_SECRET
       );
     } catch (err) {
       console.log('⚠️ Webhook signature verification failed:', err.message);
