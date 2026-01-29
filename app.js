@@ -91,7 +91,7 @@ app.post(
       event = stripe.webhooks.constructEvent(
         req.body,
         sig,
-        process.env.STRIPE_WEBSOCKET_KEY_ENERGETIC
+        process.env.STRIPE_WEBSOCKET_KEY
       );
     } catch (err) {
       return res.status(400).send(`Webhook Error: ${err.message}`);
