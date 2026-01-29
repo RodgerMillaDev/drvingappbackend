@@ -14,43 +14,6 @@ const Stripe = require("stripe");
 const stripe =new Stripe(process.env.STRIPE_SECRETKEY_TEST)
 
 // 🚨 STRIPE WEBHOOK — MUST COME FIRST
-app.post(
-  "/stripe-webhook",
-  express.raw({ type: "application/json" }),
-  async (req, res) => {
-    const sig = req.headers["stripe-signature"];
-
-    let event;
-    try {
-      event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET // 👈 correct key
-      );
-    } catch (err) {
-      console.error("❌ Webhook signature failed:", err.message);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
-
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
-
-      if (session.payment_status === "paid") {
-        const userId = session.metadata.userId;
-
-        await firestore.collection("Users").doc(userId).update({
-          coursePaid: true,
-          amountPaid: session.amount_total,
-          paymentIntentId: session.payment_intent,
-        });
-
-        console.log("✅ course paid");
-      }
-    }
-
-    res.json({ received: true });
-  }
-);
 
 
 
@@ -121,39 +84,43 @@ app.post("/paynow", async (req, res) => {
   }
 });
 
-app.post(
-  "/stripe-webhook",
-  express.raw({ type: "application/json" }),
-  async (req, res) => {
-    const sig = req.headers["stripe-signature"];
+const endpointSecret = 'whsec_...';
 
-    let event;
+// The express.raw middleware keeps the request body unparsed;
+// this is necessary for the signature verification process
+app.post('/stripe-webhook', express.raw({type: 'application/json'}), (request, response) => {
+  let event;
+  if (endpointSecret) {
+    // Get the signature sent by Stripe
+    const signature = request.headers['stripe-signature'];
     try {
       event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
+        request.body,
+        signature,
         process.env.STRIPE_WEBSOCKET_KEY
       );
     } catch (err) {
-      return res.status(400).send(`Webhook Error: ${err.message}`);
+      console.log(`⚠️ Webhook signature verification failed.`, err.message);
+      return response.sendStatus(400);
     }
 
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
-
-      if (session.payment_status === "paid") {
-        const userId = session.metadata.userId;
-
-        await firestore.collection("Users").doc(userId).update({
-          coursePaid: true,
-          amountPaid: session.amount_total,
-          paymentIntentId: session.payment_intent,
-        });
-
-        console.log("✅ course paid");
-      }
-    }
-
-    res.json({ received: true });
+  // Handle the event
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      const paymentIntent = event.data.object;
+      // Then define and call a method to handle the successful payment intent.
+      // handlePaymentIntentSucceeded(paymentIntent);
+      break;
+    case 'payment_method.attached':
+      const paymentMethod = event.data.object;
+      // Then define and call a method to handle the successful attachment of a PaymentMethod.
+      // handlePaymentMethodAttached(paymentMethod);
+      break;
+    // ... handle other event types
+    default:
+      console.log(`Unhandled event type ${event.type}`);
   }
-);
+
+  // Return a response to acknowledge receipt of the event
+  response.json({received: true});
+}});
