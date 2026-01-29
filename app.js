@@ -72,7 +72,7 @@ app.post("/paynow", async (req, res) => {
       success_url: "https://driving-web-app3.web.app/paymentcomplete",
       cancel_url: "https://driving-web-app3.web.app/paymentfailed",
     });
-    console.log("PAYMENT DONE")
+    console.log(session)
 
     res.json({ url: session.url });
 
