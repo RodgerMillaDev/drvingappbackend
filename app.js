@@ -15,6 +15,81 @@ const stripe =new Stripe(process.env.STRIPE_SECRETKEY_TEST)
 
 // 🚨 STRIPE WEBHOOK — MUST COME FIRST
 
+// ===============================
+// STRIPE WEBHOOK
+// ===============================
+
+// This route MUST come BEFORE `app.use(express.json())`
+app.post(
+  '/stripe-webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+      // ✅ Use the webhook secret, not API keys or anything else
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      console.log('⚠️ Webhook signature verification failed:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+
+        // Only update if the payment succeeded
+        if (session.payment_status === 'paid') {
+          const userId = session.metadata?.userId; // optional chaining just in case
+
+          if (!userId) {
+            console.log('⚠️ No userId found in metadata');
+            break;
+          }
+
+          try {
+            await firestore.collection('Users').doc(userId).update({
+              coursePaid: true,
+              amountPaid: session.amount_total,
+              paymentIntentId: session.payment_intent,
+            });
+
+            console.log(`✅ Course payment confirmed for user: ${userId}`);
+          } catch (firestoreErr) {
+            console.log('❌ Error updating Firestore:', firestoreErr.message);
+          }
+        } else {
+          console.log('⚠️ Checkout session completed but payment not paid yet');
+        }
+        break;
+      }
+
+      case 'payment_intent.succeeded': {
+        const paymentIntent = event.data.object;
+        console.log(`✅ PaymentIntent succeeded: ${paymentIntent.id}`);
+        break;
+      }
+
+      case 'payment_method.attached': {
+        const paymentMethod = event.data.object;
+        console.log(`✅ PaymentMethod attached: ${paymentMethod.id}`);
+        break;
+      }
+
+      default:
+        console.log(`ℹ️ Unhandled event type: ${event.type}`);
+    }
+
+    // Always respond 200 to acknowledge receipt
+    res.json({ received: true });
+  }
+);
 
 
 app.use(express.json())
@@ -83,44 +158,3 @@ app.post("/paynow", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-const endpointSecret = 'whsec_...';
-
-// The express.raw middleware keeps the request body unparsed;
-// this is necessary for the signature verification process
-app.post('/stripe-webhook', express.raw({type: 'application/json'}), (request, response) => {
-  let event;
-  if (endpointSecret) {
-    // Get the signature sent by Stripe
-    const signature = request.headers['stripe-signature'];
-    try {
-      event = stripe.webhooks.constructEvent(
-        request.body,
-        signature,
-        process.env.STRIPE_WEBSOCKET_KEY
-      );
-    } catch (err) {
-      console.log(`⚠️ Webhook signature verification failed.`, err.message);
-      return response.sendStatus(400);
-    }
-
-  // Handle the event
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object;
-      // Then define and call a method to handle the successful payment intent.
-      // handlePaymentIntentSucceeded(paymentIntent);
-      break;
-    case 'payment_method.attached':
-      const paymentMethod = event.data.object;
-      // Then define and call a method to handle the successful attachment of a PaymentMethod.
-      // handlePaymentMethodAttached(paymentMethod);
-      break;
-    // ... handle other event types
-    default:
-      console.log(`Unhandled event type ${event.type}`);
-  }
-
-  // Return a response to acknowledge receipt of the event
-  response.json({received: true});
-}});
