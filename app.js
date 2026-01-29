@@ -13,6 +13,47 @@ const app = express()
 const Stripe = require("stripe");
 const stripe =new Stripe(process.env.STRIPE_SECRETKEY_TEST)
 
+// 🚨 STRIPE WEBHOOK — MUST COME FIRST
+app.post(
+  "/stripe-webhook",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
+    const sig = req.headers["stripe-signature"];
+
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET // 👈 correct key
+      );
+    } catch (err) {
+      console.error("❌ Webhook signature failed:", err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object;
+
+      if (session.payment_status === "paid") {
+        const userId = session.metadata.userId;
+
+        await firestore.collection("Users").doc(userId).update({
+          coursePaid: true,
+          amountPaid: session.amount_total,
+          paymentIntentId: session.payment_intent,
+        });
+
+        console.log("✅ course paid");
+      }
+    }
+
+    res.json({ received: true });
+  }
+);
+
+
+
 app.use(express.json())
  app.use(cors())
 
