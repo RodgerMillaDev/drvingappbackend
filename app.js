@@ -72,7 +72,6 @@ app.post("/paynow", async (req, res) => {
       success_url: "https://driving-web-app3.web.app/paymentcomplete",
       cancel_url: "https://driving-web-app3.web.app/paymentfailed",
     });
-    console.log(session)
 
     res.json({ url: session.url });
 
@@ -82,7 +81,7 @@ app.post("/paynow", async (req, res) => {
 });
 
 app.post(
-  "/energetic-jubilee-thin",
+  "/stripe-webhook",
   express.raw({ type: "application/json" }),
   async (req, res) => {
     const sig = req.headers["stripe-signature"];
