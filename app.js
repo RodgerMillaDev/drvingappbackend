@@ -160,11 +160,10 @@ app.post("/paynow", async (req, res) => {
 });
 
 
+app.post("/confirm-pay", async (req, res) => {
+  const { sessionId } = req.body;
 
-app.get("/confirm-pay", async (req, res) => {
-  const session = await stripe.checkout.sessions.retrieve(
-    req.query.sessionId
-  );
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
 
   res.json({
     paid: session.payment_status === "paid",
