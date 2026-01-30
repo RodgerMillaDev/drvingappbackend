@@ -148,7 +148,7 @@ app.post("/paynow", async (req, res) => {
         userId: userID,
       },
 
-      success_url:        "https://driving-web-app3.web.app/paymentcomplete?session_id={CHECKOUT_SESSION_ID}",,
+      success_url: "https://driving-web-app3.web.app/paymentcomplete?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: "https://driving-web-app3.web.app/paymentfailed",
     });
 
@@ -157,4 +157,17 @@ app.post("/paynow", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+
+
+app.get("/confirmPay", async (req, res) => {
+  const session = await stripe.checkout.sessions.retrieve(
+    req.query.sessionId
+  );
+
+  res.json({
+    paid: session.payment_status === "paid",
+    amount: session.amount_total,
+  });
 });
