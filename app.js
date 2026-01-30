@@ -24,7 +24,6 @@ app.post(
   '/stripe-webhook',
   express.raw({ type: 'application/json' }),
   async (req, res) => {
-    console.log(process.env.STRIPE_WEBHOOK_SECRET)
     const sig = req.headers['stripe-signature'];
     let event;
 
@@ -149,11 +148,11 @@ app.post("/paynow", async (req, res) => {
         userId: userID,
       },
 
-      success_url: "https://driving-web-app3.web.app/paymentcomplete",
+      success_url:        "https://driving-web-app3.web.app/paymentcomplete?session_id={CHECKOUT_SESSION_ID}",,
       cancel_url: "https://driving-web-app3.web.app/paymentfailed",
     });
 
-    res.json({ url: session.url });
+    res.json({ url: session.url});
 
   } catch (err) {
     res.status(500).json({ error: err.message });
