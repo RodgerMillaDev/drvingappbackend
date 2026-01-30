@@ -161,7 +161,7 @@ app.post("/paynow", async (req, res) => {
 
 
 
-app.get("/confirmPay", async (req, res) => {
+app.get("/confirm-pay", async (req, res) => {
   const session = await stripe.checkout.sessions.retrieve(
     req.query.sessionId
   );
