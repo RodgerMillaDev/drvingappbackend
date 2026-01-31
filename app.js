@@ -170,3 +170,38 @@ app.post("/confirm-pay", async (req, res) => {
     amount: session.amount_total,
   });
 });
+
+
+// Upload PDF Route
+app.post("/savePdf", upload.single("image"), async (req, res) => {
+    try {
+        const filePath = req.file.path;
+        const {userUID,date,grade}=req.body
+    
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(filePath);
+    
+        // Delete the local file after uploading
+        fs.unlinkSync(filePath);
+    
+          var certPublicId=result.public_id;
+          var certSignature=result.signature;
+          var certURL=result.url;
+    
+          const docRef=firestore.collection("Users").doc(userUID);
+          docRef.set({
+            certURL:certURL,
+            date:date,
+            grade:grade,
+          }).then(()=>{
+            console.log("Upload Done")
+             res.json("Upload Done")
+          })
+    
+        
+      } catch (error) {
+        console.log(error)
+        res.status(500).json({ error: "Upload failed", details: error });
+      }
+  });
+  
