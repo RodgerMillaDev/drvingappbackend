@@ -207,7 +207,7 @@ app.post("/savePdf", upload.single("image"), async (req, res) => {
             certURL:certURL,
             date:date,
             grade:grade,
-            TestStatus:true,
+            TestStatus:"completed",
             quizCompleted:true
 
           }).then(()=>{
