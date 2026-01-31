@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
-const fs =require("fs")
+const fs = require("fs")
 const cors = require("cors");
 const port = process.env.PORT;
 const {
@@ -14,7 +14,7 @@ const app = express()
 const Stripe = require("stripe");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
-const stripe =new Stripe(process.env.STRIPE_SECRETKEY_TEST)
+const stripe = new Stripe(process.env.STRIPE_SECRETKEY_TEST)
 
 // 🚨 STRIPE WEBHOOK — MUST COME FIRST
 
@@ -59,7 +59,7 @@ app.post(
           try {
             await firestore.collection('Users').doc(userId).update({
               coursePaid: true,
-              
+
               amountPaid: session.amount_total,
               paymentIntentId: session.payment_intent,
             });
@@ -97,20 +97,20 @@ app.post(
 
 
 app.use(express.json())
- app.use(cors())
+app.use(cors())
 
- app.get("/", (req,res)=>{
-    res.send("Alloo we are live my bwoy. Driving App online")
- })
+app.get("/", (req, res) => {
+  res.send("Alloo we are live my bwoy. Driving App online")
+})
 
- app.listen(port,()=>{
-    console.log("Hello Ras, tuko on!")
- })
-
-
+app.listen(port, () => {
+  console.log("Hello Ras, tuko on!")
+})
 
 
- const adminUIDS = [process.env.ADMIN_ONE];
+
+
+const adminUIDS = [process.env.ADMIN_ONE];
 
 adminUIDS.forEach((uid) => {
   admin
@@ -156,7 +156,7 @@ app.post("/paynow", async (req, res) => {
       cancel_url: "https://driving-web-app3.web.app/paymentfailed",
     });
 
-    res.json({ url: session.url});
+    res.json({ url: session.url });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -182,44 +182,43 @@ const upload = multer({ dest: "drivingfolder/" });
 
 // Configure Cloudinary
 cloudinary.config({
-    cloud_name: process.env.CLOUD_NAME,
-    api_key: process.env.CLOUD_APIKEY,
-    api_secret: process.env.CLOUD_APISECRET,
-  });
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_APIKEY,
+  api_secret: process.env.CLOUD_APISECRET,
+});
 
 // Upload PDF Route
 app.post("/savePdf", upload.single("image"), async (req, res) => {
-    try {
-        const filePath = req.file.path;
-        const {userUID,date,grade}=req.body
-    
-        // Upload to Cloudinary
-        const result = await cloudinary.uploader.upload(filePath);
-    
-        // Delete the local file after uploading
-        fs.unlinkSync(filePath);
-    
-          var certPublicId=result.public_id;
-          var certSignature=result.signature;
-          var certURL=result.url;
-    
-          const docRef=firestore.collection("Users").doc(userUID);
-          docRef.set({
-            certURL:certURL,
-            date:date,
-            grade:grade,
-            TestStatus:"completed",
-            quizCompleted:true
+  try {
+    const filePath = req.file.path;
+    const { userUID, date, grade } = req.body
 
-          }).then(()=>{
-            console.log("Upload Done")
-             res.json("Upload Done")
-          })
-    
-        
-      } catch (error) {
-        console.log(error)
-        res.status(500).json({ error: "Upload failed", details: error });
-      }
-  });
-  
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(filePath);
+
+    // Delete the local file after uploading
+    fs.unlinkSync(filePath);
+
+    var certPublicId = result.public_id;
+    var certSignature = result.signature;
+    var certURL = result.url;
+
+    const docRef = firestore.collection("Users").doc(userUID);
+    docRef.update({
+      certURL: certURL,
+      date: date,
+      grade: grade,
+      TestStatus: "completed",
+      quizCompleted: true
+
+    }).then(() => {
+      console.log("Upload Done")
+      res.json("Upload Done")
+    })
+
+
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: "Upload failed", details: error });
+  }
+});
