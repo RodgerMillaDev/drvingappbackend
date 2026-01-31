@@ -58,6 +58,7 @@ app.post(
           try {
             await firestore.collection('Users').doc(userId).update({
               coursePaid: true,
+              
               amountPaid: session.amount_total,
               paymentIntentId: session.payment_intent,
             });
@@ -178,7 +179,12 @@ app.post("/confirm-pay", async (req, res) => {
 // Configure Multer for file uploads
 const upload = multer({ dest: "drivingfolder/" });
 
-
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.CLOUD_APIKEY,
+    api_secret: process.env.CLOUD_APISECRET,
+  });
 
 // Upload PDF Route
 app.post("/savePdf", upload.single("image"), async (req, res) => {
@@ -201,6 +207,9 @@ app.post("/savePdf", upload.single("image"), async (req, res) => {
             certURL:certURL,
             date:date,
             grade:grade,
+            TestStatus:true,
+            quizCompleted:true
+
           }).then(()=>{
             console.log("Upload Done")
              res.json("Upload Done")
