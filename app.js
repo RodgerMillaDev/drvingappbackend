@@ -11,6 +11,8 @@ const {
 } = require("./firebaseService");
 const app = express()
 const Stripe = require("stripe");
+const multer = require("multer");
+const cloudinary = require("cloudinary").v2;
 const stripe =new Stripe(process.env.STRIPE_SECRETKEY_TEST)
 
 // 🚨 STRIPE WEBHOOK — MUST COME FIRST
@@ -160,6 +162,7 @@ app.post("/paynow", async (req, res) => {
 });
 
 
+
 app.post("/confirm-pay", async (req, res) => {
   const { sessionId } = req.body;
 
@@ -170,6 +173,11 @@ app.post("/confirm-pay", async (req, res) => {
     amount: session.amount_total,
   });
 });
+
+
+// Configure Multer for file uploads
+const upload = multer({ dest: "drivingfolder/" });
+
 
 
 // Upload PDF Route
