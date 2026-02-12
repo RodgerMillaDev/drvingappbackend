@@ -141,7 +141,8 @@ app.post("/paynow", async (req, res) => {
             product_data: {
               name: "Driving App Payment",
             },
-            unit_amount: amount * 100,
+            // unit_amount: amount * 100,
+            unit_amount: 20 * 100,
           },
           quantity: 1,
         },
