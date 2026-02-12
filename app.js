@@ -222,3 +222,43 @@ app.post("/savePdf", upload.single("image"), async (req, res) => {
     res.status(500).json({ error: "Upload failed", details: error });
   }
 });
+
+// create user and save pdf certificate
+app.post("/saveTopdfAdmin", upload.single("image"), async (req, res) => {
+  const { userName, userEm, grade, date } = req.body;
+
+  try {
+    // 1. Create user (FORCE VERIFIED)
+    const userRecord = await admin.auth().createUser({
+      email: userEm,
+      password: "User123",
+      emailVerified: true, // ✅ forced
+    });
+
+    // 2. Upload certificate
+    const result = await cloudinary.uploader.upload(req.file.path);
+    fs.unlinkSync(req.file.path);
+
+    // 3. Save to Firestore
+    await firestore.collection("Users").doc(userRecord.uid).set({
+      name: userName,
+      email: userEm,
+      certURL: result.url,
+      date,
+      grade,
+      TestStatus: "completed",
+      quizCompleted: true,
+      emailVerified: true,
+      createdByAdmin: true, // ⭐ recommended flag
+    });
+
+    res.json({
+      success: true,
+      message: "User created with verified email",
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Operation failed" });
+  }
+});
