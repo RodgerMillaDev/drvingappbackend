@@ -125,8 +125,6 @@ adminUIDS.forEach((uid) => {
 });
 
 
-
-
 app.post("/paynow", async (req, res) => {
   try {
     const { amount, userID } = req.body;
