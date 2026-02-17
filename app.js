@@ -137,10 +137,10 @@ app.post("/paynow", async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "Driving App Payment",
+              name: "National Defensive Driving Academy (NDDA).",
             },
             // unit_amount: amount * 100,
-            unit_amount: 20 * 100,
+            unit_amount: 15 * 100,
           },
           quantity: 1,
         },
