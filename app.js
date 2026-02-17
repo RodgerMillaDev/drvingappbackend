@@ -14,7 +14,7 @@ const app = express()
 const Stripe = require("stripe");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
-const stripe = new Stripe(process.env.STRIPE_SECRETKEY_TEST)
+const stripe = new Stripe(process.env.STRIPE_SECRETKEY)
 
 // 🚨 STRIPE WEBHOOK — MUST COME FIRST
 
