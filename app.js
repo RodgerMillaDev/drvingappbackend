@@ -14,7 +14,7 @@ const app = express()
 const Stripe = require("stripe");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
-const stripe = new Stripe(process.env.STRIPE_SECRETKEY_LIVE)
+const stripe = new Stripe(process.env.STRIPE_SECRETKEY_TEST)
 
 // 🚨 STRIPE WEBHOOK — MUST COME FIRST
 
@@ -137,7 +137,7 @@ app.post("/paynow", async (req, res) => {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "National Defensive Driving Academy (NDDA).",
+              name: "NDDA Defensive Driving Course",
             },
             // unit_amount: amount * 100,
             unit_amount: 15 * 100,
