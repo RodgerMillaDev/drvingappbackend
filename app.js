@@ -126,6 +126,8 @@ adminUIDS.forEach((uid) => {
 
 
 app.post("/paynow", async (req, res) => {
+  console.log("PAYNOW HIT", req.body);
+
   try {
     const { amount, userID } = req.body;
 
@@ -136,29 +138,21 @@ app.post("/paynow", async (req, res) => {
         {
           price_data: {
             currency: "usd",
-            product_data: {
-              name: "NDDA Defensive Driving Course",
-            },
-            // unit_amount: amount * 100,
+            product_data: { name: "NDDA Defensive Driving Course" },
             unit_amount: 15 * 100,
           },
           quantity: 1,
         },
       ],
-
-      // ✅ THIS IS THE KEY PART
-      metadata: {
-        userId: userID,
-      },
-
+      metadata: { userId: userID },
       success_url: "https://driving-web-app3.web.app/paymentcomplete?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: "https://driving-web-app3.web.app/paymentfailed",
     });
-    console.log(session)
 
-    res.json({ session});
-
+    console.log("Stripe session created:", session.id);
+    res.json({ url: session.url });
   } catch (err) {
+    console.error("STRIPE ERROR:", err);
     res.status(500).json({ error: err.message });
   }
 });
