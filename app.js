@@ -154,8 +154,9 @@ app.post("/paynow", async (req, res) => {
       success_url: "https://driving-web-app3.web.app/paymentcomplete?session_id={CHECKOUT_SESSION_ID}",
       cancel_url: "https://driving-web-app3.web.app/paymentfailed",
     });
+    
 
-    res.json({ url: session.url });
+    res.json({ session });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
