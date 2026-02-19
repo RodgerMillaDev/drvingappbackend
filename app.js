@@ -109,7 +109,6 @@ app.listen(port, () => {
 
 
 
-
 const adminUIDS = [process.env.ADMIN_ONE];
 
 adminUIDS.forEach((uid) => {
