@@ -144,8 +144,8 @@ app.post("/paynow", async (req, res) => {
         },
       ],
       metadata: { userId: userID },
-      success_url: "https://driving-web-app3.web.app/paymentcomplete?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: "https://driving-web-app3.web.app/paymentfailed",
+      success_url: "https://nationaldefensivedrivingacademy.com/paymentcomplete?session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: "https://nationaldefensivedrivingacademy.com/paymentfailed",
     });
 
     console.log("Stripe session created:", session.id);
