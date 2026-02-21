@@ -59,7 +59,6 @@ app.post(
           try {
             await firestore.collection('Users').doc(userId).update({
               coursePaid: true,
-
               amountPaid: session.amount_total,
               paymentIntentId: session.payment_intent,
             });
@@ -94,8 +93,6 @@ app.post(
     res.json({ received: true });
   }
 );
-
-
 app.use(express.json())
 app.use(cors())
 
@@ -106,8 +103,6 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log("Hello Ras, tuko on!")
 })
-
-
 
 const adminUIDS = [process.env.ADMIN_ONE];
 
@@ -156,8 +151,6 @@ app.post("/paynow", async (req, res) => {
   }
 });
 
-
-
 app.post("/confirm-pay", async (req, res) => {
   const { sessionId } = req.body;
 
@@ -167,6 +160,65 @@ app.post("/confirm-pay", async (req, res) => {
     paid: session.payment_status === "paid",
     amount: session.amount_total,
   });
+});
+
+app.post("/verify-payment", async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ error: "Missing sessionId" });
+    }
+
+    // 🔐 Verify Firebase ID token
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const idToken = authHeader.split("Bearer ")[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const currentUserId = decodedToken.uid;
+
+    // Retrieve session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    if (session.payment_status !== "paid") {
+      return res.status(400).json({ error: "Payment not completed" });
+    }
+
+    const sessionUserId = session.metadata.userId;
+
+    // 🔒 Ensure session belongs to logged-in user
+    if (sessionUserId !== currentUserId) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const userRef = firestore.collection("Users").doc(currentUserId);
+    const snap = await userRef.get();
+    const user = snap.data();
+
+    // Already processed (idempotent protection)
+    if (
+      user.coursePaid &&
+      user.paymentIntentId === session.payment_intent
+    ) {
+      return res.json({ message: "Already updated" });
+    }
+
+    // Recovery update
+    await userRef.update({
+      coursePaid: true,
+      amountPaid: session.amount_total,
+      paymentIntentId: session.payment_intent,
+    });
+
+    res.json({ message: "Payment verified and recovered" });
+
+  } catch (err) {
+    console.error("VERIFY ERROR:", err);
+    res.status(500).json({ error: "Verification failed" });
+  }
 });
 
 
